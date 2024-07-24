@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "padel-api"
+version = "0.1.0"
+description = ""
+authors = ["halon176 <acc.github@halon.cc>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.1"
+uvicorn = "^0.30.3"
+sqlalchemy = "^2.0.31"
+pydantic-settings = "^2.3.4"
+pyjwt = "^2.8.0"
+passlib = "^1.7.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
