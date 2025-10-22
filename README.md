@@ -28,8 +28,20 @@ docker run -d -p 8000:8000 padel-api
 ### Manual
 
 ```bash
+# Install dependencies (if using pip)
 pip install -r requirements.txt
+
+# OR install with Poetry (recommended)
+poetry install
+
+# Run the service
 python3 run.py
+```
+
+**Note**: If dependencies have changed in `pyproject.toml`, regenerate `requirements.txt`:
+```bash
+poetry lock
+poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
 
 ## Configuration
@@ -52,6 +64,13 @@ NOTIFICATIONS_URL=http://localhost:7777/v1/email_service  # Optional
 ```
 
 **Security Note**: `SECRET_KEY` is **REQUIRED** and must be a strong random value. Never use weak values in production!
+
+## Security Features
+
+- **JWT Authentication**: Secure token-based authentication for protected endpoints
+- **Rate Limiting**: Brute force protection on login (10 attempts/minute) and registration (5/minute)
+- **CORS**: Cross-Origin Resource Sharing enabled (configure allowed origins in production)
+- **Password Hashing**: Bcrypt for secure password storage
 
 ## API
 

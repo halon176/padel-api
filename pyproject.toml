@@ -13,6 +13,7 @@ sqlalchemy = "^2.0.31"
 pydantic-settings = "^2.3.4"
 pyjwt = "^2.8.0"
 passlib = "^1.7.4"
+slowapi = "^0.1.9"
 
 
 [build-system]

@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
-from src.controllers.availabilites import (
+from src.controllers.availabilities import (
     create_availability,
     get_availability,
     get_user_availability,
