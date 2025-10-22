@@ -29,38 +29,46 @@ async def create_availability_ep(
     start_datetime = datetime.combine(payload.date, time(payload.slot_start_hour))
     end_datetime = start_datetime + timedelta(hours=1)
 
-    # check if a reservation for the same slot exists
-    reservation_exists = await get_reservation(start_datetime, end_datetime, session)
-    if reservation_exists:
-        raise HTTPException(status_code=400, detail="Slot is busy")
+    # RACE CONDITION FIX: Use transaction with SELECT FOR UPDATE lock
+    try:
+        # check if a reservation for the same slot exists
+        reservation_exists = await get_reservation(start_datetime, end_datetime, session)
+        if reservation_exists:
+            raise HTTPException(status_code=400, detail="Slot is busy")
 
-    # check if exists
-    a_exists = await get_availability(start_datetime, end_datetime, session)
-    exists_user_ids = [a.user_id for a in a_exists]
-    if user_id in exists_user_ids:
-        raise HTTPException(status_code=400, detail="Slot is already booked")
+        # Use lock=True to prevent race conditions when checking/creating availabilities
+        a_exists = await get_availability(start_datetime, end_datetime, session, lock=True)
+        exists_user_ids = [a.user_id for a in a_exists]
 
-    a = await create_availability(user_id, start_datetime, end_datetime, session)
-    exists_user_ids.append(user_id)
-    a_exists.append(a)
+        if user_id in exists_user_ids:
+            raise HTTPException(status_code=400, detail="Slot is already booked")
 
-    # if 4 users are available, create reservation
-    if len(a_exists) >= 4:
-        try:
+        # Create availability without auto-commit (part of transaction)
+        a = await create_availability(user_id, start_datetime, end_datetime, session, auto_commit=False)
+        exists_user_ids.append(user_id)
+        a_exists.append(a)
+
+        # if 4 users are available, create reservation
+        if len(a_exists) >= 4:
             reservation = await create_reservation(start_datetime, end_datetime, session)
-            for a in a_exists:
-                await create_reservation_relation(a.user_id, reservation.id, session)
-        except Exception as e:
-            logging.error(f"sql error: {e}")
-            session.rollback()
-            raise HTTPException(status_code=400, detail="Error creating reservation")
+            for a_item in a_exists:
+                await create_reservation_relation(a_item.user_id, reservation.id, session)
 
-        # send notification to users
-        # get user objects
-        users = await get_users_by_ids(exists_user_ids, session)
+            # send notification to users
+            users = await get_users_by_ids(exists_user_ids, session)
+            # use background task to send notification to make the response faster
+            bg_tasks.add_task(send_notification, users, start_datetime, end_datetime)
 
-        # use background task to send notification to make the response faster
-        bg_tasks.add_task(send_notification, users, start_datetime, end_datetime)
+        # Commit the entire transaction atomically
+        session.commit()
+
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as e:
+        logging.error(f"sql error: {e}")
+        session.rollback()
+        raise HTTPException(status_code=500, detail="Error creating availability/reservation")
 
     return a
 

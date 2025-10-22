@@ -13,7 +13,8 @@ class Settings(BaseSettings):
 
     service_port: int = 8000
 
-    secret_key: SecretStr = "secret"
+    # CRITICAL: SECRET_KEY must be set in .env file - no default for security
+    secret_key: SecretStr
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 

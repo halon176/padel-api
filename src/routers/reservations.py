@@ -9,7 +9,8 @@ router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
 @router.get("/", name="List of all reservations", response_model=list[ReservationResponse])
-async def get_all_reservations_ep(session: session_type):
+async def get_all_reservations_ep(session: session_type, user_id: int = Depends(JWTBearer())):
+    # SECURITY FIX: Now requires authentication to prevent unauthorized access
     return await get_all_reservations(session)
 
 

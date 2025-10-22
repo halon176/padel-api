@@ -34,18 +34,24 @@ python3 run.py
 
 ## Configuration
 
-It is possible configure following environment variables of .env file parameters:
+**IMPORTANT**: Before running the service, you must create a `.env` file with your configuration.
 
+Copy the example configuration:
 ```bash
-SECRET_KEY=secret # secret key for JWT token
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-SERVICE_PORT=8000
-NOTIFICATIONS_URL=http://localhost:8001 # url for notifications service
+cp .env.example .env
 ```
 
-all parameters are optional, and have default build-in values. It is strongly recommended to change `SECRET_KEY` value
-and `NOTIFICATIONS_URL` to the correct value.
+Then edit `.env` and configure the following parameters:
+
+```bash
+SECRET_KEY=your-super-secret-key  # REQUIRED - Generate with: openssl rand -hex 32
+ALGORITHM=HS256                    # Optional (default: HS256)
+ACCESS_TOKEN_EXPIRE_MINUTES=60     # Optional (default: 60)
+SERVICE_PORT=8000                  # Optional (default: 8000)
+NOTIFICATIONS_URL=http://localhost:7777/v1/email_service  # Optional
+```
+
+**Security Note**: `SECRET_KEY` is **REQUIRED** and must be a strong random value. Never use weak values in production!
 
 ## API
 
